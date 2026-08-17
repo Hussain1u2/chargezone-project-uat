@@ -1,3 +1,16 @@
 {
-  "outputDirectory": "frontend"
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/.env",
+      "destination": "/frontend/.env"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/frontend/:path*"
+    }
+  ]
 }
