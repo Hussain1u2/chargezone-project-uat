@@ -1,4 +1,3 @@
-/* Global Theme Manager (Light / Dark mode toggle) */
 const Theme = {
   getStored() {
     return localStorage.getItem('cz_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -62,7 +61,7 @@ let currentViewName = 'dashboard';
 async function switchView(view) {
   currentViewName = view;
   document.querySelectorAll('.nav-item').forEach((btn) => btn.classList.toggle('active', btn.dataset.view === view));
-  
+
   const userChip = document.getElementById('userChip');
   if (userChip) {
     userChip.classList.toggle('active', view === 'profile');
@@ -79,8 +78,8 @@ async function switchView(view) {
 async function refreshGlobalStateAndActiveView() {
   try {
     await Promise.all([
-      loadZonesAndSites().catch(() => {}),
-      loadMaterials().catch(() => {})
+      loadZonesAndSites().catch(() => { }),
+      loadMaterials().catch(() => { })
     ]);
     updateAdminAlertsBadge();
 
@@ -111,7 +110,7 @@ async function updateAdminAlertsBadge() {
       badgeEl.textContent = count;
       badgeEl.hidden = count === 0;
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function wireNav() {
@@ -133,13 +132,13 @@ function updateSidebarUser(user) {
   const regName = user.regionName || user.zoneName || user.region_name || user.zone_name;
   const fullName = user.fullName || user.full_name || user.email;
   const email = user.email;
-  
+
   const avatarEl = document.getElementById('userAvatar');
   if (avatarEl) avatarEl.textContent = (fullName || email).slice(0, 2).toUpperCase();
-  
+
   const nameEl = document.getElementById('userName');
   if (nameEl) nameEl.textContent = fullName;
-  
+
   const userRegionEl = document.getElementById('userRegion') || document.getElementById('userZone');
   if (userRegionEl) {
     const siteName = user.siteName || user.site_name;
@@ -444,10 +443,10 @@ function setupPasswordFields(container = document) {
   });
 }
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   const btn = e.target.closest('.password-toggle-btn');
   if (!btn) return;
-  
+
   e.preventDefault();
   const wrapper = btn.closest('.password-wrapper');
   const input = wrapper ? wrapper.querySelector('input') : null;
