@@ -35,14 +35,7 @@ const corsOptions = process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN 
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.use((req, res, next) => {
-  if (!req.url.startsWith('/api')) {
-    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
-  }
-  next();
-});
-
-app.get('/api/health', publicLimiter, async (req, res) => {
+const handleHealth = async (req, res) => {
   try {
     const dbRes = await pool.query('SELECT NOW() AS current_time');
     res.json({
@@ -59,21 +52,46 @@ app.get('/api/health', publicLimiter, async (req, res) => {
       serverTime: new Date().toISOString()
     });
   }
-});
+};
+
+app.get('/api/health', publicLimiter, handleHealth);
+app.get('/health', publicLimiter, handleHealth);
 
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 app.use('/api/regions', authenticatedUserLimiter, regionRoutes);
+app.use('/regions', authenticatedUserLimiter, regionRoutes);
+
 app.use('/api/zones', authenticatedUserLimiter, regionRoutes);
+app.use('/zones', authenticatedUserLimiter, regionRoutes);
+
 app.use('/api/materials', authenticatedUserLimiter, materialRoutes);
+app.use('/materials', authenticatedUserLimiter, materialRoutes);
+
 app.use('/api/purchase-orders', authenticatedUserLimiter, purchaseOrderRoutes);
+app.use('/purchase-orders', authenticatedUserLimiter, purchaseOrderRoutes);
+
 app.use('/api/items', authenticatedUserLimiter, itemRoutes);
+app.use('/items', authenticatedUserLimiter, itemRoutes);
+
 app.use('/api/transactions', authenticatedUserLimiter, transactionRoutes);
+app.use('/transactions', authenticatedUserLimiter, transactionRoutes);
+
 app.use('/api/requisitions', authenticatedUserLimiter, requisitionRoutes);
+app.use('/requisitions', authenticatedUserLimiter, requisitionRoutes);
+
 app.use('/api/replacements', authenticatedUserLimiter, replacementRoutes);
+app.use('/replacements', authenticatedUserLimiter, replacementRoutes);
+
 app.use('/api/consumptions', authenticatedUserLimiter, consumptionRoutes);
+app.use('/consumptions', authenticatedUserLimiter, consumptionRoutes);
+
 app.use('/api/dashboard', authenticatedUserLimiter, dashboardRoutes);
+app.use('/dashboard', authenticatedUserLimiter, dashboardRoutes);
+
 app.use('/api/users', authenticatedUserLimiter, userRoutes);
+app.use('/users', authenticatedUserLimiter, userRoutes);
 
 const frontendPath = path.join(__dirname, '../frontend');
 app.use(express.static(frontendPath, { dotfiles: 'allow' }));
