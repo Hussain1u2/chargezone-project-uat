@@ -40,6 +40,13 @@ const corsOptions = process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN 
 app.use(cors(corsOptions));
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  }
+  next();
+});
+
 app.get('/api/health', publicLimiter, async (req, res) => {
   try {
     const dbRes = await pool.query('SELECT NOW() AS current_time');
