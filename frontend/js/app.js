@@ -1,4 +1,39 @@
+/* Global Theme Manager (Light / Dark mode toggle) */
+const Theme = {
+  getStored() {
+    return localStorage.getItem('cz_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  },
+  setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('cz_theme', theme);
+    const sunIcons = document.querySelectorAll('.theme-icon-sun');
+    const moonIcons = document.querySelectorAll('.theme-icon-moon');
+    if (theme === 'dark') {
+      sunIcons.forEach(i => i.removeAttribute('hidden'));
+      moonIcons.forEach(i => i.setAttribute('hidden', 'true'));
+    } else {
+      sunIcons.forEach(i => i.setAttribute('hidden', 'true'));
+      moonIcons.forEach(i => i.removeAttribute('hidden'));
+    }
+  },
+  toggle() {
+    const current = this.getStored();
+    this.setTheme(current === 'dark' ? 'light' : 'dark');
+  },
+  init() {
+    this.setTheme(this.getStored());
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.theme-toggle-btn')) {
+        e.preventDefault();
+        this.toggle();
+      }
+    });
+  }
+};
+Theme.init();
+
 const VIEW_RENDERERS = {
+
   dashboard: renderDashboard,
   purchaseOrders: renderPurchaseOrders,
   stockMove: renderStockMove,
