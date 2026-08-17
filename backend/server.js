@@ -60,6 +60,8 @@ app.get('/health', publicLimiter, handleHealth);
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
+app.use('/api', authRoutes);
+app.use('/', authRoutes);
 
 app.use('/api/regions', authenticatedUserLimiter, regionRoutes);
 app.use('/regions', authenticatedUserLimiter, regionRoutes);

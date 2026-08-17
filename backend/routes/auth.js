@@ -15,7 +15,7 @@ const loginSchema = validate({
   }
 });
 
-router.post('/login', authLimiter, authExponentialBackoff, loginSchema, async (req, res) => {
+router.post(['/login', '/auth/login', '/api/auth/login'], authLimiter, authExponentialBackoff, loginSchema, async (req, res) => {
   const { email, password } = req.body;
 
   try {
