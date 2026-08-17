@@ -74,7 +74,7 @@ app.use('/api/dashboard', authenticatedUserLimiter, dashboardRoutes);
 app.use('/api/users', authenticatedUserLimiter, userRoutes);
 
 const frontendPath = path.join(__dirname, '../frontend');
-app.use(express.static(frontendPath));
+app.use(express.static(frontendPath, { dotfiles: 'allow' }));
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(frontendPath, 'index.html'));

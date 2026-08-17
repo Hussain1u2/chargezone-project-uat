@@ -1,8 +1,61 @@
-const API_BASE = (function() {
-  if (window.location.protocol === 'file:') return 'http://localhost:4000/api';
-  if (window.location.port === '4000' || window.location.port === '' || window.location.port === '80' || window.location.port === '443') return '/api';
-  return `${window.location.protocol}//${window.location.hostname}:4000/api`;
-})();
+let envConfig = null;
+let envPromise = null;
+
+function getDefaultApiBase() {
+  return '/api';
+}
+
+function parseEnvText(text) {
+  const envObj = {};
+  if (!text) return envObj;
+  text.split(/\r?\n/).forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.substring(0, eqIdx).trim();
+        const val = trimmed.substring(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        envObj[key] = val;
+      } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+        envObj['API_BASE'] = trimmed;
+      }
+    }
+  });
+  return envObj;
+}
+
+async function loadEnvConfig() {
+  if (window.ENV && typeof window.ENV === 'object') {
+    envConfig = window.ENV;
+    return envConfig;
+  }
+  try {
+    const res = await fetch('.env');
+    if (res.ok) {
+      const text = await res.text();
+      if (text && !text.trim().startsWith('<!DOCTYPE') && !text.trim().startsWith('<html')) {
+        envConfig = parseEnvText(text);
+        return envConfig;
+      }
+    }
+  } catch (e) {
+    // Ignore fetch errors and rely on fallbacks
+  }
+  return null;
+}
+
+envPromise = loadEnvConfig();
+
+function getApiBase() {
+  if (window.ENV && (window.ENV.API_BASE || window.ENV.API_BASE_URL)) {
+    return window.ENV.API_BASE || window.ENV.API_BASE_URL;
+  }
+  if (envConfig && (envConfig.API_BASE || envConfig.API_BASE_URL)) {
+    return envConfig.API_BASE || envConfig.API_BASE_URL;
+  }
+  if (window.API_BASE) return window.API_BASE;
+  return getDefaultApiBase();
+}
 
 const Auth = {
   getToken() { return localStorage.getItem('cz_token'); },
@@ -27,12 +80,16 @@ function notifyGlobalDataChange(path, method) {
 }
 
 async function apiRequest(method, path, body, isFormData = false) {
+  if (envPromise) {
+    try { await envPromise; } catch (e) {}
+  }
+  const baseUrl = getApiBase();
   const headers = {};
   const token = Auth.getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
   if (!isFormData) headers['Content-Type'] = 'application/json';
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
     body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
@@ -147,5 +204,8 @@ const Api = {
   updateUser: (id, payload) => apiRequest('PUT', `/users/${id}`, payload),
   deactivateUser: (id) => apiRequest('PATCH', `/users/${id}/deactivate`),
   reactivateUser: (id) => apiRequest('PATCH', `/users/${id}/reactivate`),
-  deleteUser: (id) => apiRequest('DELETE', `/users/${id}`)
+  deleteUser: (id) => apiRequest('DELETE', `/users/${id}`),
+
+  getApiBase: () => getApiBase(),
+  loadEnvConfig: () => loadEnvConfig()
 };

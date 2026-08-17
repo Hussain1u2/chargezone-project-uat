@@ -231,7 +231,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   } catch (err) {
     let msg = err.message || 'Login failed';
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Network Error')) {
-      msg = 'Cannot connect to backend server. Please ensure the backend is running at http://localhost:4000';
+      const apiEndpoint = (typeof Api !== 'undefined' && Api.getApiBase) ? Api.getApiBase() : '/api';
+      msg = `Cannot connect to backend server. Please ensure backend server is reachable at ${apiEndpoint}`;
     }
     errEl.textContent = msg;
     errEl.hidden = false;
