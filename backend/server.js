@@ -34,7 +34,11 @@ const path = require('path');
 app.set('trust proxy', 1);
 const corsOptions = process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN } : {};
 app.use(cors(corsOptions));
-app.use(express.json());
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') return next();
+  jsonParser(req, res, next);
+});
 
 const handleHealth = async (req, res) => {
   try {
