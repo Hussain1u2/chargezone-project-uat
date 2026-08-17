@@ -3,7 +3,6 @@ const pool = require('../config/db');
 const { authenticate, requireSuperAdmin, requireRegionAdminOrAbove, requireZoneAdminOrAbove, canActOnRegion } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
 const { dispatchToRegion, receiveInRegion, dispatchToSite, receiveAtSite, dispatchRegionToRegion, returnStock } = require('../services/stockMovementService');
-
 const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();

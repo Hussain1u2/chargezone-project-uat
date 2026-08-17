@@ -23,7 +23,7 @@ async function verifyPassword(user, password) {
 function signToken(user) {
   const userRegionId = user.region_id || user.zone_id;
   const userRole = user.role === 'zone_admin' ? 'region_admin' : user.role;
-  const secret = process.env.JWT_SECRET || 'chargezone_production_secret_key_2026';
+  const secret = process.env.JWT_SECRET || 'chargezone_dev_jwt_secret_key_change_in_production_2026';
   return jwt.sign(
     { id: user.id, email: user.email, role: userRole, regionId: userRegionId, zoneId: userRegionId, siteId: user.site_id },
     secret,

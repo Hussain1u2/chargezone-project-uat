@@ -5,7 +5,6 @@ const pool = require('../config/db');
 const { authenticate, requireRegionAdminOrAbove, canActOnRegion } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
 const { canManagePO, createFromUpload, createManual, confirmPurchaseOrder, autoResolveOrCreateMaterial } = require('../services/purchaseOrderService');
-
 const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();

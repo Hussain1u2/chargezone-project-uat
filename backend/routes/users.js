@@ -3,6 +3,7 @@ const pool = require('../config/db');
 const { authenticate, requireRegionAdminOrAbove } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
 const { validateNewUserInput, createUser, loadManageableUser, updateUser } = require('../services/userService');
+const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();
 router.use(authenticate);
@@ -42,8 +43,6 @@ const createUserSchema = validate({
     phone: v.phone({ required: false })
   }
 });
-
-const { handleRouteError } = require('../utils/errorHandler');
 
 router.post('/', requireRegionAdminOrAbove, createUserSchema, async (req, res) => {
   const validationError = validateNewUserInput(req.user, req.body);

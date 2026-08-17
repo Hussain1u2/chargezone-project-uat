@@ -3,7 +3,6 @@ const pool = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
 const { recordReplacement, markRepaired, approveScrap, rejectScrap } = require('../services/replacementService');
-
 const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();

@@ -3,6 +3,7 @@ const pool = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
 const { recordConsumption } = require('../services/consumptionService');
+const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();
 router.use(authenticate);
@@ -74,8 +75,6 @@ router.post('/', createConsumptionSchema, async (req, res) => {
   req.body.region_id = region_id;
   req.body.zone_id = region_id;
   req.body.site_id = site_id;
-
-const { handleRouteError } = require('../utils/errorHandler');
 
   try {
     const consumption = await recordConsumption(req.user, req.body);

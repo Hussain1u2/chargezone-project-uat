@@ -37,7 +37,7 @@ function sanitizeErrorMessage(err, defaultStatus = 500) {
     };
   }
 
-  if (status >= 500 && !err.isOperational) {
+  if (status >= 500 && (!err || !err.isOperational)) {
     return {
       status: 500,
       message: 'An internal server error occurred. Please try again later.'

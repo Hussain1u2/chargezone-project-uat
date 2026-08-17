@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 const { buildDashboardSummary, buildAdminAlertsPayload, getRegionStockMonitor } = require('../services/dashboardService');
+const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();
 router.use(authenticate);
@@ -9,8 +10,6 @@ router.use(authenticate);
 router.get('/summary', async (req, res) => {
   res.json(await buildDashboardSummary(req.user));
 });
-
-const { handleRouteError } = require('../utils/errorHandler');
 
 const handleRegionStockMonitor = async (req, res) => {
   try {

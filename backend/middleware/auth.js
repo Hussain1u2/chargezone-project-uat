@@ -10,7 +10,7 @@ function authenticate(req, res, next) {
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'chargezone_production_secret_key_2026';
+    const secret = process.env.JWT_SECRET || 'chargezone_dev_jwt_secret_key_change_in_production_2026';
     const decoded = jwt.verify(token, secret);
     decoded.regionId = decoded.regionId || decoded.zoneId;
     decoded.zoneId = decoded.regionId;

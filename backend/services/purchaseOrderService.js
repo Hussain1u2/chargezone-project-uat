@@ -89,7 +89,7 @@ async function createFromUpload(user, file, destinationType, regionId, zoneId) {
   return { poId, note };
 }
 
-async function createManual(user, poNumber, regionId, notes, items, zoneId) {
+async function createManual(user, poNumber, regionId, notes, items) {
   const targetRegionId = regionId || zoneId;
   const { rows: existing } = await pool.query('SELECT id FROM purchase_orders WHERE po_number = $1', [poNumber]);
   if (existing[0]) {

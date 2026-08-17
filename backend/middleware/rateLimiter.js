@@ -31,7 +31,7 @@ setInterval(() => {
       failureStore.delete(key);
     }
   }
-}, 10 * 60 * 1000);
+}, 10 * 60 * 1000).unref();
 
 async function authExponentialBackoff(req, res, next) {
   const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
