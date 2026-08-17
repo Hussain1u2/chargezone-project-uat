@@ -31,6 +31,7 @@ app.use(helmet({
 
 const path = require('path');
 
+app.set('trust proxy', 1);
 const corsOptions = process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN } : {};
 app.use(cors(corsOptions));
 app.use(express.json());

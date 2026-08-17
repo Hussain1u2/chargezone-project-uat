@@ -70,11 +70,11 @@ const authLimiter = rateLimit({
   windowMs: AUTH_WINDOW_MS,
   max: AUTH_MAX_IP,
   keyGenerator: (req) => {
-    const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const email = req.body && req.body.email;
     return getTrackKey(ip, email);
   },
-  validate: { keyGeneratorIpFallback: false },
+  validate: false,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many authentication attempts. Please wait and try again later.' }
@@ -83,6 +83,7 @@ const authLimiter = rateLimit({
 const publicLimiter = rateLimit({
   windowMs: PUBLIC_WINDOW_MS,
   max: PUBLIC_MAX,
+  validate: false,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests on public endpoint, please try again later.' }
@@ -91,6 +92,7 @@ const publicLimiter = rateLimit({
 const authenticatedUserLimiter = rateLimit({
   windowMs: AUTHENTICATED_WINDOW_MS,
   max: AUTHENTICATED_MAX,
+  validate: false,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Action rate limit exceeded. Please slow down.' }
