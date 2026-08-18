@@ -3,10 +3,10 @@ const pdfParse = require('pdf-parse');
 
 
 const PO_NUMBER_PATTERNS = [
-  /P\.?O\.?\s*(?:No\.?|Number|#|Ref\.?|ID)\s*[:#-]?\s*([A-Za-z0-9\-\/]+)/i,
-  /Purchase\s*Order\s*(?:No\.?|Number|#|Ref\.?|ID)?\s*[:#-]?\s*([A-Za-z0-9\-\/]+)/i,
-  /Order\s*(?:No\.?|Number|#|Ref\.?)\s*[:#-]?\s*([A-Za-z0-9\-\/]+)/i,
-  /Ref(?:erence)?\s*(?:No\.?|Number|#)?\s*[:#-]?\s*(PO[A-Za-z0-9\-\/]+)/i,
+  /P\.?O\.?(?:\s+(?:No\.?|Number|#|Ref\.?|ID))?\s*[:#-]?\s*([A-Za-z0-9\-\/]{3,})/i,
+  /Purchase\s*Order(?:\s+(?:No\.?|Number|#|Ref\.?|ID))?\s*[:#-]?\s*([A-Za-z0-9\-\/]{3,})/i,
+  /Order(?:\s+(?:No\.?|Number|#|Ref\.?))?\s*[:#-]?\s*([A-Za-z0-9\-\/]{3,})/i,
+  /Ref(?:erence)?(?:\s+(?:No\.?|Number|#))?\s*[:#-]?\s*(PO[A-Za-z0-9\-\/]+)/i,
   /\b(PO[-/][A-Za-z0-9\-\/]{3,})\b/i
 ];
 
@@ -52,6 +52,7 @@ function extractLineItems(text) {
 
   const items = [];
   const seenNames = new Set();
+  let pendingName = '';
 
   for (const line of lines) {
     let name = null;
@@ -94,22 +95,25 @@ function extractLineItems(text) {
 
     if (!name || isNaN(quantity) || isNaN(unitPrice)) {
       const tokens = line.split(/\s+/);
-      if (tokens.length >= 3) {
-        const numTokens = [];
-        const textTokens = [];
+      const numTokens = [];
+      const textTokens = [];
 
-        for (let i = 0; i < tokens.length; i++) {
-          const num = cleanPrice(tokens[i]);
-          if (!isNaN(num) && /^\d+(?:[.,]\d+)?$/.test(tokens[i].replace(/[₹$,]/g, '').replace(/rs\.?/gi, '').replace(/inr/gi, '').replace(/-/g, ''))) {
-            numTokens.push({ num, raw: tokens[i], idx: i });
-          } else {
-            textTokens.push(tokens[i]);
-          }
+      for (let i = 0; i < tokens.length; i++) {
+        const num = cleanPrice(tokens[i]);
+        if (!isNaN(num) && /^\d+(?:[.,]\d+)?$/.test(tokens[i].replace(/[₹$,]/g, '').replace(/rs\.?/gi, '').replace(/inr/gi, '').replace(/-/g, ''))) {
+          numTokens.push({ num, raw: tokens[i], idx: i });
+        } else {
+          textTokens.push(tokens[i]);
+        }
+      }
+
+      if (numTokens.length >= 2) {
+        let candidateName = textTokens.join(' ').replace(/^[\d\.\)-]+/, '').trim();
+        if (candidateName.length < 2) {
+          candidateName = pendingName;
         }
 
-        if (textTokens.length > 0 && numTokens.length >= 2) {
-          const candidateName = textTokens.join(' ').replace(/^[\d\.\)-]+/, '').trim();
-          
+        if (candidateName.length >= 2) {
           let found = false;
           for (let i = 0; i <= numTokens.length - 3; i++) {
             const a = numTokens[i].num;
@@ -140,12 +144,20 @@ function extractLineItems(text) {
               unitPrice = b;
             }
           }
+
+          if (name) {
+            pendingName = ''; 
+          }
+        }
+      } else {
+        if (!isExcludedHeaderOrFooter(line)) {
+          pendingName = pendingName ? pendingName + ' ' + line : line;
+          if (pendingName.length > 150) pendingName = line;
         }
       }
     }
 
     if (
-
       name &&
       name.length >= 2 &&
       !isNaN(quantity) &&
