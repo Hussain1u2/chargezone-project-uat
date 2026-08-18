@@ -86,7 +86,10 @@ async function createFromUpload(user, file, destinationType, regionId, zoneId) {
   const note = extracted.line_items.length === 0
     ? 'No line items could be auto-detected. Please add them manually below before confirming.'
     : 'Materials automatically fetched from PO.';
-  return { poId, note };
+  console.log('--- RAW EXTRACTED TEXT FROM PDF ---');
+  console.log(extracted.raw_text);
+  console.log('-----------------------------------');
+  return { poId, note, raw_text: extracted.raw_text };
 }
 
 async function createManual(user, poNumber, regionId, notes, items) {

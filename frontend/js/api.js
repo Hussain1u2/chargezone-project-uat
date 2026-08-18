@@ -30,6 +30,17 @@ async function loadEnvConfig() {
     return envConfig;
   }
   try {
+    const resJson = await fetch('env.json');
+    if (resJson.ok) {
+      const data = await resJson.json();
+      if (data && typeof data === 'object') {
+        envConfig = data;
+        return envConfig;
+      }
+    }
+  } catch (e) {}
+
+  try {
     const res = await fetch('.env');
     if (res.ok) {
       const text = await res.text();
