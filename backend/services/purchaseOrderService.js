@@ -86,10 +86,7 @@ async function createFromUpload(user, file, destinationType, regionId, zoneId) {
   const note = extracted.line_items.length === 0
     ? 'No line items could be auto-detected. Please add them manually below before confirming.'
     : 'Materials automatically fetched from PO.';
-  console.log('--- RAW EXTRACTED TEXT FROM PDF ---');
-  console.log(extracted.raw_text);
-  console.log('-----------------------------------');
-  return { poId, note, raw_text: extracted.raw_text };
+  return { poId, note };
 }
 
 async function createManual(user, poNumber, regionId, notes, items) {
@@ -121,7 +118,7 @@ async function createManual(user, poNumber, regionId, notes, items) {
 
 async function generateAscendingBarcodes(client, materialId, poId, quantity, customPrefix, startNumInput, padLenInput) {
   const prefix = (customPrefix !== undefined && customPrefix !== null && customPrefix !== '') ? customPrefix : `MAT${materialId}-PO${poId}-`;
-  
+
   let startSeq;
   if (startNumInput !== undefined && startNumInput !== null && !isNaN(parseInt(startNumInput, 10))) {
     startSeq = parseInt(startNumInput, 10);
@@ -140,7 +137,7 @@ async function generateAscendingBarcodes(client, materialId, poId, quantity, cus
     }
     startSeq = maxSeq + 1;
   }
-  
+
   const qtyInt = Math.round(quantity);
   const userPad = (padLenInput && !isNaN(parseInt(padLenInput, 10))) ? parseInt(padLenInput, 10) : 4;
   const barcodes = [];
