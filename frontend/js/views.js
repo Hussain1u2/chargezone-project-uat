@@ -18,6 +18,52 @@ function escapeHtml(str) {
 }
 const escapeHTML = escapeHtml;
 
+let activeIntervals = [];
+
+async function extractTextFromPDFWithOCR(file, progressCallback) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    const numPages = pdf.numPages;
+    let fullText = '';
+    
+    progressCallback('Downloading OCR engine...');
+    const worker = await Tesseract.createWorker({
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          progressCallback(`Scanning image (OCR: ${Math.round(m.progress * 100)}%)`);
+        }
+      }
+    });
+    
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    
+    const maxPages = Math.min(numPages, 3);
+    for (let i = 1; i <= maxPages; i++) {
+      progressCallback(`Rendering page ${i} for OCR...`);
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      
+      const { data: { text } } = await worker.recognize(canvas);
+      fullText += text + '\n\n';
+    }
+    
+    await worker.terminate();
+    return fullText;
+  } catch (err) {
+    console.error('OCR Error:', err);
+    throw new Error('Failed to run OCR on the PDF: ' + err.message);
+  }
+}
+
 function fmtDate(d) {
   if (!d) return '—';
   const dt = new Date(d);
@@ -1337,6 +1383,10 @@ function renderPOUpload(content) {
           <label>PO PDF File <span class="required">*</span></label>
           <input type="file" id="uploadFile" accept=".pdf,application/pdf" />
           <div id="fileSelectedInfo" class="muted" style="font-size:12px;margin-top:4px" hidden></div>
+          <label style="display:flex; align-items:center; gap:8px; margin-top:12px; cursor:pointer;">
+            <input type="checkbox" id="runOCR" />
+            <span style="font-weight:500; font-size:13px; color:var(--text-main)">Run OCR (Check this if uploading a scanned / image-based PDF)</span>
+          </label>
         </div>
         <button type="button" class="btn-primary" id="uploadBtn">Upload &amp; Extract PO Data</button>
       </form>
@@ -1388,6 +1438,24 @@ function renderPOUpload(content) {
       fd.append('zone_id', targetZoneId);
       fd.append('region_id', targetZoneId);
     }
+
+    const runOcr = document.getElementById('runOCR')?.checked;
+    if (runOcr) {
+      try {
+        const ocrText = await extractTextFromPDFWithOCR(file, (msg) => {
+          if (uploadBtn) uploadBtn.textContent = msg;
+        });
+        fd.append('ocrText', ocrText);
+      } catch (err) {
+        if (uploadBtn) {
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload & Extract PO Data';
+        }
+        return toast(err.message, true);
+      }
+    }
+
+    if (uploadBtn) uploadBtn.textContent = 'Uploading to server...';
 
     try {
       const po = await Api.uploadPO(fd);

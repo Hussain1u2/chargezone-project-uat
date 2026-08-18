@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const { canActOnRegion } = require('../middleware/auth');
-const { extractFromPdf } = require('../utils/pdfExtractor');
+const { extractFromPdf, extractPoNumber, extractLineItems } = require('../utils/pdfExtractor');
 const { addStock } = require('./stockService');
 
 function canManagePO(user, po) {
@@ -49,9 +49,20 @@ async function autoResolveMaterial(dbOrClient, rawName) {
 }
 
 
-async function createFromUpload(user, file, destinationType, regionId, zoneId) {
+async function createFromUpload(user, file, destinationType, regionId, zoneId, ocrText) {
   const source = file.buffer || file.path;
-  const extracted = await extractFromPdf(source);
+  
+  let extracted;
+  if (ocrText && ocrText.trim().length > 0) {
+    extracted = {
+      raw_text: ocrText,
+      po_number: extractPoNumber(ocrText),
+      line_items: extractLineItems(ocrText)
+    };
+  } else {
+    extracted = await extractFromPdf(source);
+  }
+  
   let poNumber = extracted.po_number || `PO-PDF-${Date.now().toString().slice(-6)}`;
   const targetRegionId = regionId || zoneId;
   const normDest = ['REGION', 'ZONE'].includes(destinationType) ? 'REGION' : 'HO';

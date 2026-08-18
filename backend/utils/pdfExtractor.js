@@ -206,4 +206,4 @@ async function extractFromPdf(fileSource) {
   };
 }
 
-module.exports = { extractFromPdf };
+module.exports = { extractFromPdf, extractPoNumber, extractLineItems };

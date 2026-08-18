@@ -118,7 +118,7 @@ router.post('/upload', requireRegionAdminOrAbove, (req, res, next) => {
   }
 
 
-  const { destination_type, region_id, zone_id } = req.body;
+  const { destination_type, region_id, zone_id, ocrText } = req.body;
   const userRegionId = req.user.regionId || req.user.zoneId;
   const targetRegionId = region_id || zone_id || (req.user.role !== 'super_admin' ? userRegionId : null);
   const destType = (req.user.role !== 'super_admin' || destination_type === 'ZONE' || destination_type === 'REGION') ? 'REGION' : 'HO';
@@ -132,7 +132,7 @@ router.post('/upload', requireRegionAdminOrAbove, (req, res, next) => {
   }
 
   try {
-    const { poId, note } = await createFromUpload(req.user, req.file, destType, targetRegionId);
+    const { poId, note, raw_text } = await createFromUpload(req.user, req.file, destType, targetRegionId, null, ocrText);
     const { rows: poRows } = await pool.query('SELECT *, region_id AS zone_id FROM purchase_orders WHERE id = $1', [poId]);
     const { rows: items } = await pool.query('SELECT * FROM po_items WHERE po_id = $1', [poId]);
     res.status(201).json({ ...poRows[0], items, extraction_note: note });
