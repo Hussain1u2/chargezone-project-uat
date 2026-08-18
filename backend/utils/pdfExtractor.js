@@ -100,7 +100,7 @@ function extractLineItems(text) {
 
         for (let i = 0; i < tokens.length; i++) {
           const num = cleanPrice(tokens[i]);
-          if (!isNaN(num) && /^\d+(?:[.,]\d+)?$/.test(tokens[i].replace(/[₹$Rs\.INR,]/gi, ''))) {
+          if (!isNaN(num) && /^\d+(?:[.,]\d+)?$/.test(tokens[i].replace(/[₹$,]/g, '').replace(/rs\.?/gi, '').replace(/inr/gi, '').replace(/-/g, ''))) {
             numTokens.push({ num, raw: tokens[i], idx: i });
           } else {
             textTokens.push(tokens[i]);
@@ -109,24 +109,36 @@ function extractLineItems(text) {
 
         if (textTokens.length > 0 && numTokens.length >= 2) {
           const candidateName = textTokens.join(' ').replace(/^[\d\.\)-]+/, '').trim();
-          const n1 = numTokens[0].num;
-          const n2 = numTokens[1].num;
-
-          if (numTokens.length >= 3) {
-            const n3 = numTokens[2].num;
-            if (Math.abs(n1 * n2 - n3) < 5) {
+          
+          let found = false;
+          for (let i = 0; i <= numTokens.length - 3; i++) {
+            const a = numTokens[i].num;
+            const b = numTokens[i+1].num;
+            const c = numTokens[i+2].num;
+            
+            if (a > 0 && b >= 0 && Math.abs(a * b - c) < 5) {
               name = candidateName;
-              quantity = n1;
-              unitPrice = n2;
-            } else if (Math.abs(n2 * n3 - n1) < 5) {
+              quantity = a;
+              unitPrice = b;
+              found = true;
+              break;
+            } else if (b > 0 && a >= 0 && Math.abs(a * b - c) < 5) {
               name = candidateName;
-              quantity = n2;
-              unitPrice = n3;
+              quantity = b;
+              unitPrice = a;
+              found = true;
+              break;
             }
-          } else if (n1 > 0 && n2 > 0) {
-            name = candidateName;
-            quantity = n1;
-            unitPrice = n2;
+          }
+          
+          if (!found) {
+            const a = numTokens[numTokens.length - 2].num;
+            const b = numTokens[numTokens.length - 1].num;
+            if (a > 0 && b >= 0) {
+              name = candidateName;
+              quantity = a;
+              unitPrice = b;
+            }
           }
         }
       }

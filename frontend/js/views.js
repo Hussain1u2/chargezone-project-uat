@@ -1282,7 +1282,7 @@ async function renderPOItemsTable(el, po, editable) {
           <td class="non-mono">${matchedTitle} ${matchSelectHtml}</td>
           <td>${i.quantity}</td>
           <td>${money(i.unit_price)}</td>
-          <td>${money(i.line_total)}</td>
+          <td>${money(i.line_total || (i.quantity * i.unit_price))}</td>
           ${editable ? `<td><button class="btn-ghost small danger" data-remove-item="${i.id}" style="color:var(--danger)">Remove</button></td>` : ''}
         </tr>`;
   }).join('')}
