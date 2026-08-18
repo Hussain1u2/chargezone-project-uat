@@ -26,7 +26,7 @@ function extractPoNumber(text) {
 
 function cleanPrice(str) {
   if (!str) return NaN;
-  const cleaned = String(str).replace(/[₹$Rs\.INR,]/gi, '').replace(/-/g, '').trim();
+  const cleaned = String(str).replace(/[₹$,]/g, '').replace(/rs\.?/gi, '').replace(/inr/gi, '').replace(/-/g, '').trim();
   return parseFloat(cleaned);
 }
 
