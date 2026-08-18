@@ -4,7 +4,7 @@ const path = require('path');
 const pool = require('../config/db');
 const { authenticate, requireRegionAdminOrAbove, canActOnRegion } = require('../middleware/auth');
 const { v, validate } = require('../middleware/validator');
-const { canManagePO, createFromUpload, createManual, confirmPurchaseOrder, autoResolveOrCreateMaterial } = require('../services/purchaseOrderService');
+const { canManagePO, createFromUpload, createManual, confirmPurchaseOrder, autoResolveMaterial } = require('../services/purchaseOrderService');
 const { handleRouteError } = require('../utils/errorHandler');
 
 const router = express.Router();
@@ -75,7 +75,7 @@ router.get('/:id', poIdSchema, async (req, res) => {
   const { rows: unmapped } = await pool.query('SELECT * FROM po_items WHERE po_id = $1 AND material_id IS NULL', [req.params.id]);
 
   for (const item of unmapped) {
-    const matId = await autoResolveOrCreateMaterial(pool, item.material_name_raw, item.unit_price);
+    const matId = await autoResolveMaterial(pool, item.material_name_raw);
     await pool.query('UPDATE po_items SET material_id = $1 WHERE id = $2', [matId, item.id]);
   }
 
@@ -190,7 +190,7 @@ router.post('/:id/items', addPOItemSchema, async (req, res) => {
   if (!po) return;
 
   let { material_name_raw, quantity, unit_price, material_id } = req.body;
-  const resolvedMatId = material_id || await autoResolveOrCreateMaterial(pool, material_name_raw, unit_price);
+  const resolvedMatId = material_id || await autoResolveMaterial(pool, material_name_raw);
 
   const { rows } = await pool.query(
     `INSERT INTO po_items (po_id, material_id, material_name_raw, quantity, unit_price)

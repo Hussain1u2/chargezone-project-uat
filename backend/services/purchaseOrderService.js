@@ -11,7 +11,7 @@ function canManagePO(user, po) {
   return po.entry_mode === 'MANUAL' && isRegionDest && canActOnRegion(user, poRegionId);
 }
 
-async function autoResolveOrCreateMaterial(dbOrClient, rawName, price = 0) {
+async function autoResolveMaterial(dbOrClient, rawName) {
   const cleanName = (rawName || '').trim().replace(/\s+/g, ' ') || 'PO Material Item';
 
   const { rows: exact } = await dbOrClient.query(
@@ -45,14 +45,7 @@ async function autoResolveOrCreateMaterial(dbOrClient, rawName, price = 0) {
     if (tokenMatches[0]) return tokenMatches[0].id;
   }
 
-  const priceVal = parseFloat(price || 0);
-  const { rows: created } = await dbOrClient.query(
-    `INSERT INTO materials (name, category, unit, price, min_stock_level)
-     VALUES ($1, 'PO Item', 'pcs', $2, 0) RETURNING id`,
-    [cleanName, priceVal]
-  );
-
-  return created[0].id;
+  return null;
 }
 
 
@@ -76,7 +69,7 @@ async function createFromUpload(user, file, destinationType, regionId, zoneId) {
   const poId = rows[0].id;
 
   for (const item of extracted.line_items) {
-    const matId = await autoResolveOrCreateMaterial(pool, item.material_name_raw, item.unit_price);
+    const matId = await autoResolveMaterial(pool, item.material_name_raw || item.material_name);
     await pool.query(
       'INSERT INTO po_items (po_id, material_id, material_name_raw, quantity, unit_price) VALUES ($1, $2, $3, $4, $5)',
       [poId, matId, item.material_name_raw, item.quantity, item.unit_price]
@@ -107,7 +100,7 @@ async function createManual(user, poNumber, regionId, notes, items) {
 
   for (const item of items) {
     const rawName = item.material_name || item.material_name_raw || 'Unnamed material';
-    const matId = item.material_id || await autoResolveOrCreateMaterial(pool, rawName, item.unit_price);
+    const matId = item.material_id || await autoResolveMaterial(pool, rawName);
     await pool.query(
       'INSERT INTO po_items (po_id, material_id, material_name_raw, quantity, unit_price) VALUES ($1, $2, $3, $4, $5)',
       [poId, matId, rawName, item.quantity, item.unit_price || 0]
@@ -196,7 +189,7 @@ async function confirmPurchaseOrder(user, poId, serialsByItemId = {}) {
 
     for (const item of poItems) {
       if (!item.material_id) {
-        const matId = await autoResolveOrCreateMaterial(client, item.material_name_raw, item.unit_price);
+        const matId = await autoResolveMaterial(client, item.material_name_raw);
         await client.query('UPDATE po_items SET material_id = $1 WHERE id = $2', [matId, item.id]);
         item.material_id = matId;
       }
@@ -239,5 +232,5 @@ async function confirmPurchaseOrder(user, poId, serialsByItemId = {}) {
   return rows[0];
 }
 
-module.exports = { canManagePO, createFromUpload, createManual, confirmPurchaseOrder, autoResolveOrCreateMaterial };
+module.exports = { canManagePO, createFromUpload, createManual, confirmPurchaseOrder, autoResolveMaterial };
 
