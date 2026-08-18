@@ -1029,6 +1029,7 @@ async function renderPOList(content) {
 async function renderPODetail(el, poId) {
   el.innerHTML = `<div class="empty-state">Loading purchase order…</div>`;
   const po = await Api.purchaseOrder(poId);
+  const isSuperAdmin = State.user.role === 'super_admin';
   const isOwnZonePurchase =
     ['zone_admin', 'region_admin'].includes(State.user.role) &&
     ['REGION', 'ZONE'].includes(po.destination_type) &&
