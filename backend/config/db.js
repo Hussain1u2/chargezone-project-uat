@@ -6,8 +6,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 types.setTypeParser(types.builtins.NUMERIC, parseFloat);
 types.setTypeParser(types.builtins.INT8, (value) => parseInt(value, 10));
 
-const defaultNeonUrl = 'postgresql://neondb_owner:npg_YugLQN4CksA0@ep-hidden-mouse-azl6kzaz-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || defaultNeonUrl;
+const defaultNeonUrl = 'postgresql://neondb_owner:npg_YugLQN4CksA0@ep-hidden-mouse-azl6kzaz-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&uselibpqcompat=true';
+let connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL || defaultNeonUrl;
+
+if (connectionString && connectionString.includes('sslmode=require') && !connectionString.includes('uselibpqcompat')) {
+  connectionString = connectionString.replace('sslmode=require', 'sslmode=require&uselibpqcompat=true');
+}
 
 let poolConfig = {};
 
